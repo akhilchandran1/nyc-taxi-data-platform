@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: stg_yellow_trips
+    description: Cleaned staging view over accepted and flagged yellow taxi trip rows loaded by the Python pipeline.
+    columns:
+      - name: raw_trip_id
+        tests:
+          - unique
+          - not_null
+      - name: trip_hash
+        tests:
+          - not_null
+      - name: pickup_datetime
+        tests:
+          - not_null
+      - name: dropoff_datetime
+        tests:
+          - not_null
+      - name: quality_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["accepted", "flagged"]
