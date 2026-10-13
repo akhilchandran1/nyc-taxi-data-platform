@@ -63,7 +63,7 @@ Repeat the CLI command to check that a second run doesn't insert duplicates.
 
 ### Build SQL models
 
-Copy `dbt/profiles.yml.example` to `dbt/profiles.yml`. The local profile uses the database credentials shown above by default; environment variables can override them.
+Copy `dbt/profiles.yml.example` to `dbt/profiles.yml`. The local profile uses the database credentials shown above by default; environment variables can override them. dbt reads raw tables from `public` unless `DBT_RAW_SCHEMA` is set to another schema for isolated verification.
 
 ```bash
 cd dbt
