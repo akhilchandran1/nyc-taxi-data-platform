@@ -3,7 +3,10 @@ from __future__ import annotations
 import urllib.error
 from email.message import Message
 
-from taxi_pipeline.extract import build_dataset_url, discover_available_datasets
+import pandas as pd
+import pytest
+
+from taxi_pipeline.extract import build_dataset_url, discover_available_datasets, read_parquet
 
 
 class FakeResponse:
@@ -52,3 +55,38 @@ def test_discover_available_datasets_skips_unpublished_months(monkeypatch) -> No
         (2026, 1, 123),
         (2026, 3, 456),
     ]
+
+
+def test_read_parquet_respects_limit_rows(tmp_path) -> None:
+    path = tmp_path / "sample.parquet"
+    pd.DataFrame({"trip_id": [1, 2, 3], "total_amount": [10.0, 20.0, 30.0]}).to_parquet(
+        path,
+        index=False,
+    )
+
+    frame = read_parquet(path, limit_rows=2)
+
+    assert len(frame) == 2
+    assert frame["trip_id"].tolist() == [1, 2]
+
+
+@pytest.mark.parametrize("limit_rows", [0, -1])
+def test_read_parquet_rejects_non_positive_limit(tmp_path, limit_rows: int) -> None:
+    path = tmp_path / "sample.parquet"
+    pd.DataFrame({"trip_id": [1]}).to_parquet(path, index=False)
+
+    with pytest.raises(ValueError, match="limit_rows must be positive"):
+        read_parquet(path, limit_rows=limit_rows)
+
+
+def test_read_parquet_allows_limit_larger_than_file(tmp_path) -> None:
+    path = tmp_path / "sample.parquet"
+    pd.DataFrame({"trip_id": [1, 2], "total_amount": [10.0, 20.0]}).to_parquet(
+        path,
+        index=False,
+    )
+
+    frame = read_parquet(path, limit_rows=10)
+
+    assert len(frame) == 2
+    assert frame["trip_id"].tolist() == [1, 2]
